@@ -18,9 +18,8 @@ class Board extends React.Component {
     this.state = {
       location_x: 0,
       location_y: 0,
-      board_width:  4,
-      board_length: 4,
-      squares: Array(9).fill(null)
+      board_width:  10,
+      board_length: 10,
     };
     this.handleKeyPress = this.handleKeyPress.bind(this)
 
@@ -31,29 +30,22 @@ class Board extends React.Component {
   }
 
   move(x, y) {
-    console.log("Move involked!")
     var new_x = this.state.location_x + x;
     var new_y = this.state.location_y + y;
     // Perform some bounds checking
-    if (new_x >= 0 && new_y >= 0) {
-      console.log("Moving x")
-      console.log(new_x)
-      console.log(new_y)
+    if (new_x >= 0 && new_y >= 0 && this.state.board_length > new_y &&
+        this.state.board_width > new_x) {
       this.setState({"location_x" : new_x, "location_y" : new_y})
     }
   }
 
   renderRow(row_y, row_size) {
     var rows = [];
-    console.log("Rendering row")
-    console.log(this.state.location_x)
-    console.log(this.state.location_y)
+
     for (var i=0; i < row_size; i++) {
         var mark = null;
         if (row_y == this.state.location_y && i == this.state.location_x) {
           mark = 'X';
-
-          console.log("X should be here")
         }
         rows.push(this.renderSquare(mark));
     }
