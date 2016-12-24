@@ -44,8 +44,8 @@ class Board extends React.Component {
     var new_x = this.state.location_x + x;
     var new_y = this.state.location_y + y;
     // Check we're still on the map
-    if (new_x < 0 || new_y < 0 || this.state.board_length < new_y ||
-        this.state.board_width < new_x) { return }
+    if (new_x < 0 || new_y < 0 || this.state.board_length <= new_y ||
+        this.state.board_width <= new_x) { return }
 
     // Check we're not going into the maze
     if (this.board[new_x][new_y] != null) { return }
@@ -64,17 +64,56 @@ class Board extends React.Component {
     return false
   }
 
+  getRandomInt() {
+    if (Math.random() > 0.5) {
+      return 1;
+    } else {
+      return -1;
+    }
+  }
+
   generateMaze() {
-    for (var x = 0; x < this.state.board_width-1; x++) {
-      for (var y = 0; y < this.state.board_length-1; y++) {
-        var rnd = Math.random();
-        if (rnd > 0.5) {
-          this.board[x+1][y] = 'I';
-        } else {
-          this.board[x][y+1] = 'I';
-        }
+    var visited_cells = new Set();
+    var current_point = {x: 0, y: 0};
+    var goal = {x:9, y:9};
+
+    for (var x = 0; x < this.state.board_width; x++) {
+      for (var y = 0; y < this.state.board_length; y++) {
+        this.board[x][y] = 'I';
       }
     }
+    var count = 0;
+    while (current_point.x != goal.x || current_point.y != goal.y) {
+      this.board[current_point.x][current_point.y] = null;
+
+      // Pick an adjacent cell
+      var new_point;
+      if (Math.random() > 0.5) {
+        // Change y
+        var new_y = current_point.y + this.getRandomInt();
+        // Check the bounds
+        if (new_y < 0 || new_y >= this.state.board_length) {
+          continue
+        } 
+        new_point = { x: current_point.x, y:new_y };
+      } else {
+        // Change x
+        var new_x = current_point.x + this.getRandomInt();
+        if (new_x < 0 || new_x >= this.state.board_width) {
+          continue
+        } 
+        new_point = { x: new_x, y:current_point.y };
+      }
+
+      if (!visited_cells.has(new_point)) {
+        current_point = new_point;
+        visited_cells.add(current_point);
+      }
+      count += 1;
+    }
+
+    this.board[goal.x][goal.y] = null;
+
   }
   renderRow(row_y, row_size) {
     var rows = [];
@@ -90,7 +129,6 @@ class Board extends React.Component {
 
   render() {
     var rows = [];
-    var count = 0;
     for (var i=0; i < this.state.board_length; i++) {
       rows.push(this.renderRow(i, this.state.board_width));
     }
