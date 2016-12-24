@@ -13,6 +13,7 @@ class Square extends React.Component {
 }
 
 class Board extends React.Component {
+
   constructor() {
     super();
     this.state = {
@@ -21,22 +22,37 @@ class Board extends React.Component {
       board_width:  10,
       board_length: 10,
     };
-    this.handleKeyPress = this.handleKeyPress.bind(this)
+    this.maze = [[1, 1], [2, 1]];
 
+    // Ensures we can access this object in the callback method 
+    this.handleKeyPress = this.handleKeyPress.bind(this)
   }
 
-  renderSquare(contains_x) {
-    return <Square value={contains_x} />;
+  renderSquare(contains) {
+    return <Square value={contains} />;
   }
 
   move(x, y) {
     var new_x = this.state.location_x + x;
     var new_y = this.state.location_y + y;
-    // Perform some bounds checking
-    if (new_x >= 0 && new_y >= 0 && this.state.board_length > new_y &&
-        this.state.board_width > new_x) {
-      this.setState({"location_x" : new_x, "location_y" : new_y})
+    // Check we're still on the map
+    if (new_x < 0 || new_y < 0 || this.state.board_length < new_y ||
+        this.state.board_width < new_x) { return }
+
+    // Check we're not going into the maze
+    if (this.isSquareInMaze(new_x, new_y)) { return }
+
+    this.setState({"location_x" : new_x, "location_y" : new_y})
+  }
+
+  isSquareInMaze(x, y) {
+    for (var i in this.maze) {
+      var maze_point = this.maze[i];
+      if (maze_point[0] === x && maze_point[1] === y) {
+        return true
+      }
     }
+    return false
   }
 
   renderRow(row_y, row_size) {
@@ -44,8 +60,11 @@ class Board extends React.Component {
 
     for (var i=0; i < row_size; i++) {
         var mark = null;
-        if (row_y == this.state.location_y && i == this.state.location_x) {
+        // Check where the character is
+        if (row_y === this.state.location_y && i === this.state.location_x) {
           mark = 'X';
+        } else if (this.isSquareInMaze(i, row_y)) {
+          mark = 'I'
         }
         rows.push(this.renderSquare(mark));
     }
@@ -64,7 +83,7 @@ class Board extends React.Component {
     }
 
     return (
-     <div id="blah" onKeyUp={this.handleKeyPress}>
+     <div id="rows" onKeyUp={this.handleKeyPress}>
         {rows}
       </div>
     );
@@ -105,25 +124,5 @@ ReactDOM.render(
   <App />,
   document.getElementById('container')
 );
-
-function calculateWinner(squares) {
-  const lines = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6],
-  ];
-  for (let i = 0; i < lines.length; i++) {
-    const [a, b, c] = lines[i];
-    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a];
-    }
-  }
-  return null;
-}
 
 export default App;
