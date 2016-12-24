@@ -18,10 +18,11 @@ class Board extends React.Component {
     super();
     // Create the board
     this.state = {
-      location_x: 0,
-      location_y: 0,
-      board_width:  10,
-      board_length: 10,
+      location_x: 0, // X coordinate of X
+      location_y: 0, // Y coordinate of X
+      board_width:  15, // width of the board
+      board_length: 20, // length of the board
+      x_blocker_dropped: false, // If the user has dropped a blocker on their current square
     };
     this.board = [];
     for (var x = 0; x < this.state.board_width; x++) {
@@ -34,6 +35,7 @@ class Board extends React.Component {
     this.board[0][0] = 'X';
     // Ensures we can access this object in the callback method 
     this.handleKeyPress = this.handleKeyPress.bind(this)
+    this.handleDropBlocker = this.handleDropBlocker.bind(this)
   }
 
   renderSquare(contains) {
@@ -49,7 +51,13 @@ class Board extends React.Component {
 
     // Check we're not going into the maze
     if (this.board[new_x][new_y] != null) { return }
-    this.board[this.state.location_x][this.state.location_y] = null;
+    // If the user has dropped a blocker, we need to put it here
+    if (this.state.x_blocker_dropped) {
+      this.board[this.state.location_x][this.state.location_y] = '-';
+      this.setState({"x_blocker_dropped" : false});
+    } else {
+      this.board[this.state.location_x][this.state.location_y] = null;
+    }
     this.board[new_x][new_y] = 'X';
     this.setState({"location_x" : new_x, "location_y" : new_y})
   }
@@ -65,36 +73,41 @@ class Board extends React.Component {
   }
 
   getRandomInt() {
-    if (Math.random() > 0.5) {
+    if (Math.random() > 0.47) {
       return 1;
     } else {
       return -1;
     }
   }
 
+  handleDropBlocker() {
+    this.setState({"x_blocker_dropped" : true})
+  }
+
   generateMaze() {
     var visited_cells = new Set();
     var current_point = {x: 0, y: 0};
-    var goal = {x:9, y:9};
-
+    var goal = {x: this.state.board_width-1, y: this.state.board_length-1};
     for (var x = 0; x < this.state.board_width; x++) {
       for (var y = 0; y < this.state.board_length; y++) {
         this.board[x][y] = 'I';
       }
     }
     var count = 0;
+    var prev_prob = 0.5;
     while (current_point.x != goal.x || current_point.y != goal.y) {
       this.board[current_point.x][current_point.y] = null;
 
       // Pick an adjacent cell
       var new_point;
-      if (Math.random() > 0.5) {
+      if (Math.random() > prev_prob) {
         // Change y
         var new_y = current_point.y + this.getRandomInt();
         // Check the bounds
         if (new_y < 0 || new_y >= this.state.board_length) {
           continue
         } 
+        prev_prob = 0.5;
         new_point = { x: current_point.x, y:new_y };
       } else {
         // Change x
@@ -103,12 +116,14 @@ class Board extends React.Component {
           continue
         } 
         new_point = { x: new_x, y:current_point.y };
+        prev_prob = 0.5;
       }
 
       if (!visited_cells.has(new_point)) {
         current_point = new_point;
         visited_cells.add(current_point);
       }
+
       count += 1;
     }
 
@@ -149,6 +164,8 @@ class Board extends React.Component {
       this.move(1, 0);
     } else if (event.key == 'a') {
       this.move(-1, 0);
+    } else if (event.key == 'q') {
+      this.handleDropBlocker();
     }
   }
 }
