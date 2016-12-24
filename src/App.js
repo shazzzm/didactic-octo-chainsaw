@@ -30,6 +30,7 @@ class Board extends React.Component {
         this.board[x].push(null);
       }
     }
+    this.generateMaze()
     this.board[0][0] = 'X';
     // Ensures we can access this object in the callback method 
     this.handleKeyPress = this.handleKeyPress.bind(this)
@@ -47,7 +48,7 @@ class Board extends React.Component {
         this.state.board_width < new_x) { return }
 
     // Check we're not going into the maze
-    //if (this.isSquareInMaze(new_x, new_y)) { return }
+    if (this.board[new_x][new_y] != null) { return }
     this.board[this.state.location_x][this.state.location_y] = null;
     this.board[new_x][new_y] = 'X';
     this.setState({"location_x" : new_x, "location_y" : new_y})
@@ -64,12 +65,13 @@ class Board extends React.Component {
   }
 
   generateMaze() {
-    for (var x = 0; x < this.board_width; x++) {
-      for (var y = 0; y < this.board_length; y++) {
+    for (var x = 0; x < this.state.board_width-1; x++) {
+      for (var y = 0; y < this.state.board_length-1; y++) {
         var rnd = Math.random();
-
         if (rnd > 0.5) {
-          this.board[x][y] = 'I';
+          this.board[x+1][y] = 'I';
+        } else {
+          this.board[x][y+1] = 'I';
         }
       }
     }
