@@ -16,14 +16,21 @@ class Board extends React.Component {
 
   constructor() {
     super();
+    // Create the board
     this.state = {
       location_x: 0,
       location_y: 0,
       board_width:  10,
       board_length: 10,
     };
-    this.maze = [[1, 1], [2, 1]];
-
+    this.board = [];
+    for (var x = 0; x < this.state.board_width; x++) {
+      this.board.push([]);
+      for (var y = 0; y < this.state.board_length; y++) {
+        this.board[x].push(null);
+      }
+    }
+    this.board[0][0] = 'X';
     // Ensures we can access this object in the callback method 
     this.handleKeyPress = this.handleKeyPress.bind(this)
   }
@@ -40,8 +47,9 @@ class Board extends React.Component {
         this.state.board_width < new_x) { return }
 
     // Check we're not going into the maze
-    if (this.isSquareInMaze(new_x, new_y)) { return }
-
+    //if (this.isSquareInMaze(new_x, new_y)) { return }
+    this.board[this.state.location_x][this.state.location_y] = null;
+    this.board[new_x][new_y] = 'X';
     this.setState({"location_x" : new_x, "location_y" : new_y})
   }
 
@@ -55,18 +63,21 @@ class Board extends React.Component {
     return false
   }
 
+  generateMaze() {
+    for (var x = 0; x < this.board_width; x++) {
+      for (var y = 0; y < this.board_length; y++) {
+        var rnd = Math.random();
+
+        if (rnd > 0.5) {
+          this.board[x][y] = 'I';
+        }
+      }
+    }
+  }
   renderRow(row_y, row_size) {
     var rows = [];
-
     for (var i=0; i < row_size; i++) {
-        var mark = null;
-        // Check where the character is
-        if (row_y === this.state.location_y && i === this.state.location_x) {
-          mark = 'X';
-        } else if (this.isSquareInMaze(i, row_y)) {
-          mark = 'I'
-        }
-        rows.push(this.renderSquare(mark));
+        rows.push(this.renderSquare(this.board[i][row_y]));
     }
     return (
       <div className="board-row">
