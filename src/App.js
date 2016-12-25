@@ -23,6 +23,7 @@ class Board extends React.Component {
       board_width:  15, // width of the board
       board_length: 20, // length of the board
       x_blocker_dropped: false, // If the user has dropped a blocker on their current square
+      o_array: [], // Array containing location of the os
     };
     this.board = [];
     for (var x = 0; x < this.state.board_width; x++) {
@@ -32,6 +33,7 @@ class Board extends React.Component {
       }
     }
     this.generateMaze()
+    this.generateOs(7)
     this.board[0][0] = 'X';
     // Ensures we can access this object in the callback method 
     this.handleKeyPress = this.handleKeyPress.bind(this)
@@ -40,6 +42,45 @@ class Board extends React.Component {
 
   renderSquare(contains) {
     return <Square value={contains} />;
+  }
+
+  // Returns a random integer between min (included) and max (excluded)
+// Using Math.round() will give you a non-uniform distribution!
+getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
+  generateOs(noOs) {
+    var o_array = this.state.o_array.slice()
+    for (var i = 0; i < noOs; i++) {
+      while (true) {
+        var x = this.getRandomInt(0, this.state.board_width);
+        var y = this.getRandomInt(0, this.state.board_length);
+        // Check if this point is occupied
+        if (this.board[x][y] == null) { break; }
+      }
+      var point = [x, y];
+      o_array.push(point);
+      this.board[x][y] = 'O'
+    }
+    this.setState({o_array : o_array })
+  }
+
+  moveOTowardsUser(oX, oY, oIndex) {
+    var o_array = this.state.o_array.slice()
+
+    if (this.state.location_x > oX && Math.random() > 0.5) {
+      o_array[oIndex][0] += 1;
+    } else if (this.state.location_x < oX && Math.random() > 0.5) {
+      o_array[oIndex][0] -= 1;
+    } else if (this.state.location_x > oX ) {
+      o_array[oIndex][1] += 1;
+    } else {
+      o_array[oIndex][1] -= 1;
+    }
+    this.setState({o_array : o_array })    
   }
 
   move(x, y) {
@@ -72,7 +113,7 @@ class Board extends React.Component {
     return false
   }
 
-  getRandomInt() {
+  generateNextMazePoint() {
     if (Math.random() > 0.47) {
       return 1;
     } else {
@@ -102,7 +143,7 @@ class Board extends React.Component {
       var new_point;
       if (Math.random() > prev_prob) {
         // Change y
-        var new_y = current_point.y + this.getRandomInt();
+        var new_y = current_point.y + this.generateNextMazePoint();
         // Check the bounds
         if (new_y < 0 || new_y >= this.state.board_length) {
           continue
@@ -111,7 +152,7 @@ class Board extends React.Component {
         new_point = { x: current_point.x, y:new_y };
       } else {
         // Change x
-        var new_x = current_point.x + this.getRandomInt();
+        var new_x = current_point.x + this.generateNextMazePoint();
         if (new_x < 0 || new_x >= this.state.board_width) {
           continue
         } 
