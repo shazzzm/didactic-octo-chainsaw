@@ -22,7 +22,8 @@ class Board extends React.Component {
       location_y: 0, // Y coordinate of X
       board_width:  15, // width of the board
       board_length: 20, // length of the board
-      x_blocker_dropped: false, // If the user has dropped a blocker on their current square
+      num_os : 5, // Number of os on the board
+      level_openness: 0.5, // How many squares will be maze
       o_array: [], // Array containing location of the os
     };
     this.board = [];
@@ -33,11 +34,10 @@ class Board extends React.Component {
       }
     }
     this.generateMaze()
-    this.generateOs(7)
+    this.state.o_array = this.generateOs(this.state.num_os)
     this.board[0][0] = 'X';
     // Ensures we can access this object in the callback method 
     this.handleKeyPress = this.handleKeyPress.bind(this)
-    this.handleDropBlocker = this.handleDropBlocker.bind(this)
   }
 
   renderSquare(contains) {
@@ -65,33 +65,49 @@ getRandomInt(min, max) {
       o_array.push(point);
       this.board[x][y] = 'O'
     }
-    this.setState({o_array : o_array })
+    return o_array;
   }
 
-  moveOTowardsUser(oX, oY, oIndex) {
+  updateOs() {
     var o_array = this.state.o_array.slice()
+    console.log(o_array.length)
+    for (var i = 0; i < o_array.length; i++) {
+      this.moveOTowardsUser(i)
+    }
+  }
 
-    if (this.state.location_x > oX && Math.random() > 0.5) {
+  moveOTowardsUser(oIndex) {
+    var o_array = this.state.o_array.slice()
+  
+    var oX = o_array[oIndex][0];
+    var oY = o_array[oIndex][1];
+    var upDown = Math.random() > 0.5;
+    if (this.state.location_x > oX && upDown) {
       o_array[oIndex][0] += 1;
-    } else if (this.state.location_x < oX && Math.random() > 0.5) {
+    } else if (this.state.location_x < oX && upDown) {
       o_array[oIndex][0] -= 1;
-    } else if (this.state.location_x > oX ) {
+    } else if (this.state.location_y > oY ) {
       o_array[oIndex][1] += 1;
     } else {
       o_array[oIndex][1] -= 1;
     }
-    this.setState({o_array : o_array })    
+
+    var new_oX = o_array[oIndex][0];
+    var new_oY = o_array[oIndex][1];
+
+    // Check this new move is legit
+    if (this.isSpaceFree(new_oX, new_oY)) {
+      this.board[oX][oY] = null;
+      this.board[new_oX][new_oY] = 'O';
+      this.setState({o_array : o_array })    
+    }
   }
 
   move(x, y) {
     var new_x = this.state.location_x + x;
     var new_y = this.state.location_y + y;
     // Check we're still on the map
-    if (new_x < 0 || new_y < 0 || this.state.board_length <= new_y ||
-        this.state.board_width <= new_x) { return }
-
-    // Check we're not going into the maze
-    if (this.board[new_x][new_y] != null) { return }
+    if (!this.isSpaceFree(new_x, new_y)) { return }
     // If the user has dropped a blocker, we need to put it here
     if (this.state.x_blocker_dropped) {
       this.board[this.state.location_x][this.state.location_y] = '-';
@@ -101,6 +117,19 @@ getRandomInt(min, max) {
     }
     this.board[new_x][new_y] = 'X';
     this.setState({"location_x" : new_x, "location_y" : new_y})
+
+    this.updateOs()
+
+  }
+
+  isSpaceFree(x, y) {
+    // Checks if a move is legit
+    if (this.board[x][y] != null) { return false }
+        // Check we're still on the map
+    if (x < 0 || y < 0 || this.state.board_length <= y ||
+        this.state.board_width <= x) { return false }
+
+    return true;
   }
 
   isSquareInMaze(x, y) {
@@ -114,15 +143,11 @@ getRandomInt(min, max) {
   }
 
   generateNextMazePoint() {
-    if (Math.random() > 0.47) {
+    if (Math.random() > this.state.level_openness) {
       return 1;
     } else {
       return -1;
     }
-  }
-
-  handleDropBlocker() {
-    this.setState({"x_blocker_dropped" : true})
   }
 
   generateMaze() {
@@ -207,6 +232,7 @@ getRandomInt(min, max) {
       this.move(-1, 0);
     } else if (event.key == 'q') {
       this.handleDropBlocker();
+    } else if (event.key == 'z') {
     }
   }
 }
