@@ -5,7 +5,7 @@ import './App.css';
 class Square extends React.Component {
   render() {
     return (
-      <button className="square">
+      <button className="square" key={this.props.id}>
         {this.props.value}
       </button>
     );
@@ -16,32 +16,40 @@ class Board extends React.Component {
 
   constructor() {
     super();
-    // Create the board
-    this.state = {
-      location_x: 0, // X coordinate of X
-      location_y: 0, // Y coordinate of X
-      board_width:  15, // width of the board
-      board_length: 20, // length of the board
-      num_os : 5, // Number of os on the board
-      level_openness: 0.5, // How many squares will be maze
-      o_array: [], // Array containing location of the os
-    };
-    this.board = [];
-    for (var x = 0; x < this.state.board_width; x++) {
-      this.board.push([]);
-      for (var y = 0; y < this.state.board_length; y++) {
-        this.board[x].push(null);
+    var location_x = 0;
+    var location_y = 0;
+    this.board_width = 15;
+    this.board_length = 20;
+    var num_os = 5;
+    this.level_openness = 0.48; // How many squares will be maze
+    var board = [];
+
+    for (var x = 0; x < this.board_width; x++) {
+      board.push([]);
+      for (var y = 0; y < this.board_length; y++) {
+        board[x].push(null);
       }
     }
-    this.generateMaze()
-    this.state.o_array = this.generateOs(this.state.num_os)
-    this.board[0][0] = 'X';
+    board = this.generateMaze(board)
+    board[0][0] = 'X';
+
+    var o_array = this.generateOs(num_os, this.board_width, this.board_length, board)
+    console.log(o_array)
+        // Create the board
+    this.state = {
+      location_x: location_x, // X coordinate of X
+      location_y: location_y, // Y coordinate of X
+      num_os : num_os, // Number of os on the board
+      o_array: o_array, // Array containing location of the os
+      board: board,
+    };
+
     // Ensures we can access this object in the callback method 
     this.handleKeyPress = this.handleKeyPress.bind(this)
   }
 
-  renderSquare(contains) {
-    return <Square value={contains} />;
+  renderSquare(contains, id) {
+    return <Square value={contains} key={id} />;
   }
 
   // Returns a random integer between min (included) and max (excluded)
@@ -52,82 +60,119 @@ getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-  generateOs(noOs) {
-    var o_array = this.state.o_array.slice()
+generateOs(noOs, board_width, board_length, board) {
+    var o_array = [];
+    console.log(board)
     for (var i = 0; i < noOs; i++) {
       while (true) {
-        var x = this.getRandomInt(0, this.state.board_width);
-        var y = this.getRandomInt(0, this.state.board_length);
+        var x = this.getRandomInt(0, board_width);
+        var y = this.getRandomInt(0, board_length);
         // Check if this point is occupied
-        if (this.board[x][y] == null) { break; }
+        if (this.isSpaceFree(x, y, board)) { break; }
       }
       var point = [x, y];
+      board[x][y] = 'O';
       o_array.push(point);
-      this.board[x][y] = 'O'
     }
     return o_array;
   }
 
-  updateOs() {
-    var o_array = this.state.o_array.slice()
-    console.log(o_array.length)
-    for (var i = 0; i < o_array.length; i++) {
-      this.moveOTowardsUser(i)
+  deepCopyArray(array) {
+    var new_arr = [];
+    for (var i = 0; i < array.length; i++) {
+      var tmp = [];
+      for (var j = 0; j < array[i].length; j++) {
+        tmp.push(array[i][j]);
+      }
+      new_arr.push(tmp);
     }
+    return new_arr;
   }
 
-  moveOTowardsUser(oIndex) {
-    var o_array = this.state.o_array.slice()
-  
-    var oX = o_array[oIndex][0];
-    var oY = o_array[oIndex][1];
+  calculateOMoves(oIndex, board, new_o_array) {  
+    var oX = new_o_array[oIndex][0];
+    var oY = new_o_array[oIndex][1];
+    var new_oX = oX;
+    var new_oY = oY;
     var upDown = Math.random() > 0.5;
-    if (this.state.location_x > oX && upDown) {
-      o_array[oIndex][0] += 1;
-    } else if (this.state.location_x < oX && upDown) {
-      o_array[oIndex][0] -= 1;
+    if (this.state.location_x > oX) {
+      new_oX += 1;
+    } else if (this.state.location_x < oX) {
+      new_oX -= 1;
     } else if (this.state.location_y > oY ) {
-      o_array[oIndex][1] += 1;
+      new_oY += 1;
+    } else if (this.state.location_y < oY) {
+      new_oY -= 1;
     } else {
-      o_array[oIndex][1] -= 1;
+      console.log(oIndex)
+      console.log("Is not moving")
     }
-
-    var new_oX = o_array[oIndex][0];
-    var new_oY = o_array[oIndex][1];
 
     // Check this new move is legit
-    if (this.isSpaceFree(new_oX, new_oY)) {
-      this.board[oX][oY] = null;
-      this.board[new_oX][new_oY] = 'O';
-      this.setState({o_array : o_array })    
+    if (this.isSpaceFree(new_oX, new_oY, board)) {
+      new_o_array[oIndex][0] = new_oX;
+      new_o_array[oIndex][1] = new_oY;
+    } 
+
+    return new_o_array
+  }
+
+  moveOsOnBoard(board, old_o_array, new_o_array) {
+    // Remove the old os
+    for (var i = 0; i < old_o_array.length; i++) {
+      board[old_o_array[i][0]][old_o_array[i][1]] = null;
     }
+
+    // Create the new os
+    for (var i = 0; i < new_o_array.length; i++) {
+      board[new_o_array[i][0]][new_o_array[i][1]] = 'O';
+    }
+
+    return board;
+  }
+
+  countOsOnBoard(board) {
+    var count = 0;
+    for (var i = 0; i < board.length; i++) {
+      for (var j = 0; j < board[i].length; j++) {
+        if (board[i][j] === 'O') {
+          count++;
+        }
+      }
+    }
+    return count;
   }
 
   move(x, y) {
+    var board = this.deepCopyArray(this.state.board);
     var new_x = this.state.location_x + x;
     var new_y = this.state.location_y + y;
-    // Check we're still on the map
-    if (!this.isSpaceFree(new_x, new_y)) { return }
-    // If the user has dropped a blocker, we need to put it here
-    if (this.state.x_blocker_dropped) {
-      this.board[this.state.location_x][this.state.location_y] = '-';
-      this.setState({"x_blocker_dropped" : false});
-    } else {
-      this.board[this.state.location_x][this.state.location_y] = null;
-    }
-    this.board[new_x][new_y] = 'X';
-    this.setState({"location_x" : new_x, "location_y" : new_y})
 
-    this.updateOs()
+
+    // Check we're still on the map
+    if (this.isSpaceFree(new_x, new_y, board)) {
+      // Clean up the user's X    
+      board[this.state.location_x][this.state.location_y] = null;
+      board[new_x][new_y] = 'X';
+      // Move the os
+      var new_o_array = this.deepCopyArray(this.state.o_array);
+      for (var i = 0; i < new_o_array.length; i++) {
+        new_o_array = this.calculateOMoves(i, board, new_o_array);
+      }
+      // Do the o movement
+      board = this.moveOsOnBoard(board, this.state.o_array, new_o_array);
+      //board = this.updateOs(board)
+      this.setState({location_x : new_x, location_y : new_y, board : board, o_array : new_o_array})
+    }
 
   }
 
-  isSpaceFree(x, y) {
+  isSpaceFree(x, y, board) {
+    // Check we're still on the map
+    if (x < 0 || y < 0 || this.board_length <= y ||
+        this.board_width <= x) { return false }
     // Checks if a move is legit
-    if (this.board[x][y] != null) { return false }
-        // Check we're still on the map
-    if (x < 0 || y < 0 || this.state.board_length <= y ||
-        this.state.board_width <= x) { return false }
+    if (board[x][y] != null) { return false }
 
     return true;
   }
@@ -143,26 +188,25 @@ getRandomInt(min, max) {
   }
 
   generateNextMazePoint() {
-    if (Math.random() > this.state.level_openness) {
+    if (Math.random() > this.level_openness) {
       return 1;
     } else {
       return -1;
     }
   }
 
-  generateMaze() {
+  generateMaze(board) {
     var visited_cells = new Set();
     var current_point = {x: 0, y: 0};
-    var goal = {x: this.state.board_width-1, y: this.state.board_length-1};
-    for (var x = 0; x < this.state.board_width; x++) {
-      for (var y = 0; y < this.state.board_length; y++) {
-        this.board[x][y] = 'I';
+    var goal = {x: this.board_width-1, y: this.board_length-1};
+    for (var x = 0; x < this.board_width; x++) {
+      for (var y = 0; y < this.board_length; y++) {
+        board[x][y] = 'I';
       }
     }
-    var count = 0;
     var prev_prob = 0.5;
     while (current_point.x != goal.x || current_point.y != goal.y) {
-      this.board[current_point.x][current_point.y] = null;
+      board[current_point.x][current_point.y] = null;
 
       // Pick an adjacent cell
       var new_point;
@@ -170,36 +214,32 @@ getRandomInt(min, max) {
         // Change y
         var new_y = current_point.y + this.generateNextMazePoint();
         // Check the bounds
-        if (new_y < 0 || new_y >= this.state.board_length) {
+        if (new_y < 0 || new_y >= this.board_length) {
           continue
         } 
-        prev_prob = 0.5;
         new_point = { x: current_point.x, y:new_y };
       } else {
         // Change x
         var new_x = current_point.x + this.generateNextMazePoint();
-        if (new_x < 0 || new_x >= this.state.board_width) {
+        if (new_x < 0 || new_x >= this.board_width) {
           continue
         } 
         new_point = { x: new_x, y:current_point.y };
-        prev_prob = 0.5;
       }
 
       if (!visited_cells.has(new_point)) {
         current_point = new_point;
         visited_cells.add(current_point);
       }
-
-      count += 1;
     }
 
-    this.board[goal.x][goal.y] = null;
-
+    board[goal.x][goal.y] = null;
+    return board;
   }
   renderRow(row_y, row_size) {
     var rows = [];
     for (var i=0; i < row_size; i++) {
-        rows.push(this.renderSquare(this.board[i][row_y]));
+        rows.push(this.renderSquare(this.state.board[i][row_y], i+row_y*row_size));
     }
     return (
       <div className="board-row">
@@ -210,8 +250,8 @@ getRandomInt(min, max) {
 
   render() {
     var rows = [];
-    for (var i=0; i < this.state.board_length; i++) {
-      rows.push(this.renderRow(i, this.state.board_width));
+    for (var i=0; i < this.board_length; i++) {
+      rows.push(this.renderRow(i, this.board_width));
     }
 
     return (
