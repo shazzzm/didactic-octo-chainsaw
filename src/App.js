@@ -23,6 +23,7 @@ class Board extends React.Component {
     var num_os = 5;
     this.level_openness = 0.48; // How many squares will be maze
     var board = [];
+    this.goal = [this.board_width-1, this.board_length-1]; // Place we want to reach
 
     for (var x = 0; x < this.board_width; x++) {
       board.push([]);
@@ -148,7 +149,9 @@ generateOs(noOs, board_width, board_length, board) {
     var new_x = this.state.location_x + x;
     var new_y = this.state.location_y + y;
 
-
+    if (new_x == this.goal[0] && new_y == this.goal[1]) {
+      alert('You won!')
+    }
     // Check we're still on the map
     if (this.isSpaceFree(new_x, new_y, board)) {
       // Clean up the user's X    
