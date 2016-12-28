@@ -144,6 +144,14 @@ generateOs(noOs, board_width, board_length, board) {
     return count;
   }
 
+  hasUserLost(x, y, board) {
+    // Check if the user can move - if they can't they've lost
+    return !this.isSpaceFree(x+1, y, board) &&
+           !this.isSpaceFree(x-1, y, board) &&
+           !this.isSpaceFree(x, y+1, board) &&
+           !this.isSpaceFree(x, y-1, board);
+  }
+
   move(x, y) {
     var board = this.deepCopyArray(this.state.board);
     var new_x = this.state.location_x + x;
@@ -151,7 +159,12 @@ generateOs(noOs, board_width, board_length, board) {
 
     if (new_x == this.goal[0] && new_y == this.goal[1]) {
       alert('You won!')
+    } else if (this.hasUserLost(this.state.location_x, this.state.location_y, board)) {
+      alert('You lost! :(')
     }
+
+    
+
     // Check we're still on the map
     if (this.isSpaceFree(new_x, new_y, board)) {
       // Clean up the user's X    
