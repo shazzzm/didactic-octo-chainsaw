@@ -20,6 +20,15 @@ class ReplayButton extends React.Component {
   }
 }
 
+class NextLevelButton extends React.Component {
+  render () {
+    return <button className="next_level_button" onClick={() => window.location = "http://localhost:3000/?level="+this.props.level} >
+    Next Level
+    </button>
+  }
+}
+
+
 class Board extends React.Component {
 
   constructor() {
@@ -290,15 +299,17 @@ generateOs(noOs, board_width, board_length, board) {
     for (var i=0; i < this.board_length; i++) {
       rows.push(this.renderRow(i, this.board_width));
     }
-    var lostButton = null;
+    var button = null;
     console.log(this.state.lost)
     if (this.state.lost) {
-      lostButton = <ReplayButton />;
+      button = <ReplayButton />;
+    } else if (this.state.won) {
+      button = <NextLevelButton />
     }
     return (
       <div id="board">
         <div id="buttons">
-          {lostButton}
+          {button}
         </div>
         <div id="rows" onKeyUp={this.handleKeyPress}>
           {rows}
