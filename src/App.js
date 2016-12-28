@@ -110,7 +110,7 @@ generateOs(noOs, board_width, board_length, board) {
     }
 
     // Check this new move is legit
-    if (this.isSpaceFree(new_oX, new_oY, board)) {
+    if (this.isSpaceFree(new_oX, new_oY, board, new_o_array)) {
       new_o_array[oIndex][0] = new_oX;
       new_o_array[oIndex][1] = new_oY;
     } 
@@ -183,12 +183,18 @@ generateOs(noOs, board_width, board_length, board) {
 
   }
 
-  isSpaceFree(x, y, board) {
+  isSpaceFree(x, y, board, o_array) {
     // Check we're still on the map
     if (x < 0 || y < 0 || this.board_length <= y ||
         this.board_width <= x) { return false }
     // Checks if a move is legit
     if (board[x][y] != null) { return false }
+
+    for (var i in o_array) {
+      if (o_array[i][0] == x && o_array[i][1] == y) {
+        return false;
+      } 
+    }
 
     return true;
   }
