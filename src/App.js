@@ -12,6 +12,14 @@ class Square extends React.Component {
   }
 }
 
+class ReplayButton extends React.Component {
+  render () {
+    return <button className="replay_button" onClick={() => location.reload()} >
+    Replay!
+    </button>
+  }
+}
+
 class Board extends React.Component {
 
   constructor() {
@@ -35,14 +43,15 @@ class Board extends React.Component {
     board[0][0] = 'X';
 
     var o_array = this.generateOs(num_os, this.board_width, this.board_length, board)
-    console.log(o_array)
-        // Create the board
+    // Create the board
     this.state = {
       location_x: location_x, // X coordinate of X
       location_y: location_y, // Y coordinate of X
       num_os : num_os, // Number of os on the board
       o_array: o_array, // Array containing location of the os
-      board: board,
+      board: board, // The board
+      won: false, // Whether the user has won
+      lost: false, // If the user has lost
     };
 
     // Ensures we can access this object in the callback method 
@@ -63,7 +72,7 @@ getRandomInt(min, max) {
 
 generateOs(noOs, board_width, board_length, board) {
     var o_array = [];
-    console.log(board)
+
     for (var i = 0; i < noOs; i++) {
       while (true) {
         var x = this.getRandomInt(0, board_width);
@@ -156,11 +165,15 @@ generateOs(noOs, board_width, board_length, board) {
     var board = this.deepCopyArray(this.state.board);
     var new_x = this.state.location_x + x;
     var new_y = this.state.location_y + y;
+    var won = this.state.won;
+    var lost = this.state.lost;
 
     if (new_x == this.goal[0] && new_y == this.goal[1]) {
       alert('You won!')
-    } else if (this.hasUserLost(this.state.location_x, this.state.location_y, board)) {
+      won = true;
+    } else if (!won && !lost && this.hasUserLost(this.state.location_x, this.state.location_y, board)) {
       alert('You lost! :(')
+      lost = true;
     }
 
     
@@ -178,7 +191,9 @@ generateOs(noOs, board_width, board_length, board) {
       // Do the o movement
       board = this.moveOsOnBoard(board, this.state.o_array, new_o_array);
       //board = this.updateOs(board)
-      this.setState({location_x : new_x, location_y : new_y, board : board, o_array : new_o_array})
+      this.setState({location_x : new_x, location_y : new_y, board : board, o_array : new_o_array, won: won, lost:lost})
+    } else {
+      this.setState({won: won, lost:lost})
     }
 
   }
@@ -275,10 +290,19 @@ generateOs(noOs, board_width, board_length, board) {
     for (var i=0; i < this.board_length; i++) {
       rows.push(this.renderRow(i, this.board_width));
     }
-
+    var lostButton = null;
+    console.log(this.state.lost)
+    if (this.state.lost) {
+      lostButton = <ReplayButton />;
+    }
     return (
-     <div id="rows" onKeyUp={this.handleKeyPress}>
-        {rows}
+      <div id="board">
+        <div id="buttons">
+          {lostButton}
+        </div>
+        <div id="rows" onKeyUp={this.handleKeyPress}>
+          {rows}
+        </div>
       </div>
     );
   }
