@@ -31,16 +31,27 @@ class NextLevelButton extends React.Component {
 
 class Board extends React.Component {
 
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
+    
+    if (props.level == null || props.level=="undefined") {
+      this.level = 1;
+    } else {
+      this.level = props.level;
+    }
+    console.log(this.level)
+
     var location_x = 0;
     var location_y = 0;
     this.board_width = 15;
     this.board_length = 20;
-    var num_os = 5;
+    this.goal = [this.board_width-1, this.board_length-1]; // Place we want to reach
+
+    // Let's figure out the difficulty
+
+    this.num_os = 5;
     this.level_openness = 0.48; // How many squares will be maze
     var board = [];
-    this.goal = [this.board_width-1, this.board_length-1]; // Place we want to reach
 
     for (var x = 0; x < this.board_width; x++) {
       board.push([]);
@@ -51,12 +62,11 @@ class Board extends React.Component {
     board = this.generateMaze(board)
     board[0][0] = 'X';
 
-    var o_array = this.generateOs(num_os, this.board_width, this.board_length, board)
+    var o_array = this.generateOs(this.num_os, this.board_width, this.board_length, board)
     // Create the board
     this.state = {
       location_x: location_x, // X coordinate of X
       location_y: location_y, // Y coordinate of X
-      num_os : num_os, // Number of os on the board
       o_array: o_array, // Array containing location of the os
       board: board, // The board
       won: false, // Whether the user has won
@@ -304,7 +314,8 @@ generateOs(noOs, board_width, board_length, board) {
     if (this.state.lost) {
       button = <ReplayButton />;
     } else if (this.state.won) {
-      button = <NextLevelButton />
+      var nextLevel = Number(this.level) + 1
+      button = <NextLevelButton level={nextLevel}/>
     }
     return (
       <div id="board">
@@ -335,11 +346,15 @@ generateOs(noOs, board_width, board_length, board) {
 }
 
 class App extends React.Component {
+getURLParameter(name) {
+  return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [null, ''])[1].replace(/\+/g, '%20')) || null;
+}
   render() {
+    var level = this.getURLParameter("level")
     return (
       <div className="game">
         <div className="game-board">
-          <Board />
+          <Board level={level} />
         </div>
         <div className="game-info">
           <div>{/* status */}</div>
