@@ -34,10 +34,21 @@ class Board extends React.Component {
   constructor(props) {
     super(props);
     
+    // This contains a lookup table for level values
+    var level_vals = [
+       [5, 0.48], [6, 0.48], [6, 0.49], [7, 0.49]
+    ];
+
     if (props.level == null || props.level=="undefined") {
       this.level = 1;
     } else {
       this.level = props.level;
+
+      if (this.level < 1) {
+        this.level = 1;
+      } else if (this.level >= level_vals.length) {
+        this.level = level_vals.length - 1;
+      }
     }
     console.log(this.level)
 
@@ -49,8 +60,8 @@ class Board extends React.Component {
 
     // Let's figure out the difficulty
 
-    this.num_os = 5;
-    this.level_openness = 0.48; // How many squares will be maze
+    this.num_os = level_vals[this.level-1][0];
+    this.level_openness = level_vals[this.level][1]; // How many squares will be maze
     var board = [];
 
     for (var x = 0; x < this.board_width; x++) {
@@ -61,7 +72,7 @@ class Board extends React.Component {
     }
     board = this.generateMaze(board)
     board[0][0] = 'X';
-
+    board[this.goal[0]][this.goal[1]] = <img src="flag_24.png" />
     var o_array = this.generateOs(this.num_os, this.board_width, this.board_length, board)
     // Create the board
     this.state = {
@@ -221,8 +232,12 @@ generateOs(noOs, board_width, board_length, board) {
     // Check we're still on the map
     if (x < 0 || y < 0 || this.board_length <= y ||
         this.board_width <= x) { return false }
+
+    // Check we're not moving to the goal, as there will be a flag in the way
+    var positionIsNotGoal = !(x == this.goal && y == this.goal);
+
     // Checks if a move is legit
-    if (board[x][y] != null) { return false }
+    if (positionIsNotGoal && board[x][y] != null) { return false }
 
     for (var i in o_array) {
       if (o_array[i][0] == x && o_array[i][1] == y) {
