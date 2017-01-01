@@ -134,25 +134,51 @@ generateOs(noOs, board_width, board_length, board) {
     var oY = new_o_array[oIndex][1];
     var new_oX = oX;
     var new_oY = oY;
-    var upDown = Math.random() > 0.5;
+    var xMovePossible = false;
+    var yMovePossible = false;
+
+    // Figure out which direction we want to move in
     if (this.state.location_x > oX) {
       new_oX += 1;
     } else if (this.state.location_x < oX) {
       new_oX -= 1;
-    } else if (this.state.location_y > oY ) {
+    } 
+    if (this.state.location_y > oY ) {
       new_oY += 1;
     } else if (this.state.location_y < oY) {
       new_oY -= 1;
-    } else {
-      console.log(oIndex)
-      console.log("Is not moving")
     }
 
-    // Check this new move is legit
-    if (this.isSpaceFree(new_oX, new_oY, board, new_o_array)) {
-      new_o_array[oIndex][0] = new_oX;
-      new_o_array[oIndex][1] = new_oY;
+    // Figure out which direction we can move in
+    if (this.isSpaceFree(new_oX, oY, board, new_o_array)) {
+      xMovePossible = true;
     } 
+    if (this.isSpaceFree(oX, new_oY, board, new_o_array)) {
+      yMovePossible = true;
+    }
+
+    // Select a direction to move in
+    // if we can only move in 1 direction, do that
+    if (xMovePossible && !yMovePossible) {
+      new_oY = oY;
+    } else if (!xMovePossible && yMovePossible) {
+      new_oX = oX;
+    } else if (xMovePossible && yMovePossible) {
+      // If we can move in both, chose one!
+      var directionToMove = Math.random() > 0.5;
+
+      if (directionToMove) {
+        new_oY = oY;
+      } else {
+        new_oX = oX;
+      }
+    } else {
+      new_oX = oX;
+      new_oY = oY;
+    }
+
+    new_o_array[oIndex][0] = new_oX;
+    new_o_array[oIndex][1] = new_oY;
 
     return new_o_array
   }
