@@ -18,6 +18,8 @@ class LevelGenerator
 
         this.board = board;
         this.level_openness = 0.5;
+        this.o_array = [];
+
     }
    generateNextMazePoint() {
     if (Math.random() > this.level_openness) {
@@ -71,6 +73,50 @@ class LevelGenerator
     return board;
   }
 
+  getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min)) + min;
+  }
+
+  generateOs(noOs) {
+    var o_array = [];
+    var noOs = 5;
+
+    for (var i = 0; i < noOs; i++) {
+      while (true) {
+        var x = this.getRandomInt(0, this.board_width);
+        var y = this.getRandomInt(0, this.board_length);
+        // Check if this point is occupied
+        if (this.isSpaceFree(x, y, this.board)) { break; }
+      }
+      var point = [x, y];
+      this.board[x][y] = 'O';
+      o_array.push(point);
+    }
+    return o_array;
+  }
+
+  isSpaceFree(x, y, board, o_array) {
+    // Check we're still on the map
+    if (x < 0 || y < 0 || this.board_length <= y ||
+        this.board_width <= x) { return false }
+
+    // Check we're not moving to the goal, as there will be a flag in the way
+    var positionIsNotGoal = !(x == this.goal && y == this.goal);
+
+    // Checks if a move is legit
+    if (positionIsNotGoal && board[x][y] != null) { return false }
+
+    for (var i in o_array) {
+      if (o_array[i][0] == x && o_array[i][1] == y) {
+        return false;
+      } 
+    }
+
+    return true;
+  }
+
   printBoard() {
       var outp = "";
       for (var i = 0; i < this.board_length+2; i++) {
@@ -96,7 +142,16 @@ class LevelGenerator
       console.log(outp)
   }
 }
-
+var fs = require('fs');
+var readline = require('readline');
 var generator = new LevelGenerator()
 generator.generateMaze()
+generator.generateOs()
 generator.printBoard()
+console.log("Do you like this board?")
+
+var jsonString = JSON.stringify(generator.board)
+fs.writeFile("level.json", jsonString, function (err) {
+    if (err) return console.log(err);
+    console.log("Level generated")
+});
