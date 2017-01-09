@@ -77,10 +77,6 @@ class Board extends React.Component {
     this.handleKeyPress = this.handleKeyPress.bind(this)
   }
 
-  renderSquare(contains, id) {
-    return <Square value={contains} key={id} />;
-  }
-
   // Returns a random integer between min (included) and max (excluded)
 // Using Math.round() will give you a non-uniform distribution!
 getRandomInt(min, max) {
@@ -99,7 +95,7 @@ generateOs(noOs, board_width, board_length, board) {
         // Check if this point is occupied
         if (this.isSpaceFree(x, y, board)) { break; }
       }
-      var object = SimpleObject(x, y)
+      var object = new SimpleObject(x, y)
       o_array.push(object);
     }
     return o_array;
@@ -182,16 +178,6 @@ generateOs(noOs, board_width, board_length, board) {
     return true;
   }
 
-  isSquareInMaze(x, y) {
-    for (var i in this.maze) {
-      var maze_point = this.maze[i];
-      if (maze_point[0] === x && maze_point[1] === y) {
-        return true
-      }
-    }
-    return false
-  }
-
   generateNextMazePoint() {
     if (Math.random() > this.level_openness) {
       return 1;
@@ -213,8 +199,8 @@ generateOs(noOs, board_width, board_length, board) {
       }
     }
 
-    for (var x = 0; x < this.board_width; x++) {
-      for (var y = 0; y < this.board_length; y++) {
+    for (x = 0; x < this.board_width; x++) {
+      for (y = 0; y < this.board_length; y++) {
         board[x][y] = 'I';
       }
     }
@@ -251,10 +237,26 @@ generateOs(noOs, board_width, board_length, board) {
     return board;
   }
 
-  renderRow(row_y, row_size) {
+  /**
+   * Generates a board from the maze and object arary
+   */
+  generateBoard(object_array) {
+    var board = this.deepCopyArray(this.maze)
+    for (var i = 0; i < object_array.length; i++) {
+      board[object_array[i].x][object_array[i].y] = object_array.logo;
+    }
+    console.log(board)
+    return board;
+  }
+
+  renderSquare(contains, id) {
+    return <Square value={contains} key={id} />;
+  }
+
+  renderRow(board, y) {
     var rows = [];
-    for (var i=0; i < row_size; i++) {
-        rows.push(this.renderSquare(this.state.board[i][row_y], i+row_y*row_size));
+    for (var i=0; i < board.length; i++) {
+        rows.push(this.renderSquare(board[i][y], i+y*board.length));
     }
     return (
       <div className="board-row">
@@ -265,8 +267,10 @@ generateOs(noOs, board_width, board_length, board) {
 
   render() {
     var rows = [];
+    console.log(this.state.object_array)
+    var board = this.generateBoard(this.state.object_array);
     for (var i=0; i < this.board_length; i++) {
-      rows.push(this.renderRow(i, this.board_width));
+      rows.push(this.renderRow(board, i));
     }
     var button = null;
     console.log(this.state.lost)

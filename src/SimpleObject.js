@@ -1,4 +1,4 @@
-class SimpleObject {
+export default class SimpleObject {
     /**
      * Represents a simple object that moves towards the user everytime they move
      */
@@ -9,6 +9,7 @@ class SimpleObject {
     constructor(starting_x, starting_y, board_width, board_length) {
         this.x = starting_x;
         this.y = starting_y;
+        this.logo = 'O';
     }
 
     /**
