@@ -17,7 +17,7 @@ class SimpleObject {
      * x_y - y location of the user
      * 
      */
-    update(x_x, x_y, object_array, my_object_index) {
+    update(x_x, x_y, object_array) {
         var new_oX = this.x;
         var new_oY = this.y;
         var xMovePossible = false;
@@ -36,10 +36,10 @@ class SimpleObject {
         }
 
         // Figure out which direction we can move in
-        if (this.isSpaceFree(new_oX, oY, board, new_o_array)) {
+        if (this.isSpaceFree(new_oX, oY, board, object_array)) {
             xMovePossible = true;
         } 
-        if (this.isSpaceFree(oX, new_oY, board, new_o_array)) {
+        if (this.isSpaceFree(oX, new_oY, board, object_array)) {
             yMovePossible = true;
         }
 
@@ -63,16 +63,14 @@ class SimpleObject {
             new_oY = oY;
         }
 
-        new_o_array[oIndex][0] = new_oX;
-        new_o_array[oIndex][1] = new_oY;
-
-        return new_o_array
+        this.x = new_oX;
+        this.y = new_oY;
     }
 
     /**
      * Checks if a space is free
      */
-    isSpaceFree(x, y, board, object_array, my_object_index) {
+    isSpaceFree(x, y, board, object_array) {
         // Check we're still on the map
         if (x < 0 || y < 0 || board.length() <= y ||
             board[0].length() <= x) { return false }
@@ -81,10 +79,8 @@ class SimpleObject {
         if (board[x][y] != null) { return false }
 
         for (var i in object_array) {
-            if (i != my_object_index) {
-                if (object_array[i].x == x && object_array[i].u == y) {
-                    return false;
-                }
+            if (object_array[i].x == x && object_array[i].u == y) {
+                return false;
             }
         }
 
