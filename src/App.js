@@ -137,9 +137,10 @@ generateOs(noOs, board_width, board_length, board) {
 
     // Check we're still on the map
     if (this.isSpaceFree(new_x, new_y, this.maze, this.state.object_array)) {
-      // Do the o movement
-      //this.moveOsOnBoard(board, this.state.o_array, new_o_array);
-      //board = this.updateOs(board)
+      // Update the objects
+      for (var i = 0; i < this.state.object_array.length; i++) {
+        this.state.object_array[i].update(this.state.location_x, this.state.location_y, new_x, new_y, this.state.object_array, this.maze);
+      }
       this.setState({location_x : new_x, location_y : new_y, object_array : this.state.object_array, won: won, lost:lost})
     } else {
       this.setState({won: won, lost:lost})
@@ -256,13 +257,11 @@ generateOs(noOs, board_width, board_length, board) {
 
   render() {
     var rows = [];
-    console.log(this.state.object_array)
     var board = this.generateBoard(this.state.object_array);
     for (var i=0; i < this.board_length; i++) {
       rows.push(this.renderRow(board, i));
     }
     var button = null;
-    console.log(this.state.lost)
     if (this.state.lost) {
       button = <ReplayButton />;
     } else if (this.state.won) {
