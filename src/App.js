@@ -243,8 +243,9 @@ generateOs(noOs, board_width, board_length, board) {
   generateBoard(object_array) {
     var board = this.deepCopyArray(this.maze)
     for (var i = 0; i < object_array.length; i++) {
-      board[object_array[i].x][object_array[i].y] = object_array.logo;
+      board[object_array[i].x][object_array[i].y] = object_array[i].logo;
     }
+    board[this.state.location_x][this.state.location_y] = 'X';
     console.log(board)
     return board;
   }
