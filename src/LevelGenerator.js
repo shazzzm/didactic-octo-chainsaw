@@ -17,8 +17,9 @@ class LevelGenerator
         }
 
         this.board = board;
-        this.level_openness = 0.5;
+        this.level_openness = 0.55;
         this.o_array = [];
+        this.num_os = 25;
 
     }
    generateNextMazePoint() {
@@ -81,9 +82,8 @@ class LevelGenerator
 
   generateOs(noOs) {
     var o_array = [];
-    var noOs = 5;
 
-    for (var i = 0; i < noOs; i++) {
+    for (var i = 0; i < this.num_os; i++) {
       while (true) {
         var x = this.getRandomInt(0, this.board_width);
         var y = this.getRandomInt(0, this.board_length);

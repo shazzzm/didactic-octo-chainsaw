@@ -35,10 +35,7 @@ class Board extends React.Component {
     super(props);
     
     // This contains a lookup table for level values
-    var level_vals = [
-       [5, 0.48], [6, 0.48], [6, 0.49], [7, 0.49]
-    ];
-
+    var num_levels = 10;
     if (props.level == null || props.level=="undefined") {
       this.level = 1;
     } else {
@@ -46,10 +43,12 @@ class Board extends React.Component {
 
       if (this.level < 1) {
         this.level = 1;
-      } else if (this.level >= level_vals.length) {
-        this.level = level_vals.length - 1;
+      } else if (this.level > num_levels) {
+        this.level = num_levels - 1;
       }
     }
+
+    var level = require('./levels/' +this.level+".js")
 
     var location_x = 0;
     var location_y = 0;
@@ -57,13 +56,10 @@ class Board extends React.Component {
     this.board_length = 20;
     this.goal = [this.board_width-1, this.board_length-1]; // Place we want to reach
 
-    // Let's figure out the difficulty
-    this.num_os = level_vals[this.level-1][0];
-    this.level_openness = level_vals[this.level][1]; // How many squares will be maze
-
-    var board = this.generateMaze()
+    var board = level.level;
+    board[this.goal[0]][this.goal[1]] = <img src="flag_24.png" />
     this.maze = board;
-    var object_array = this.generateOs(this.num_os, this.board_width, this.board_length, board)
+    var object_array = this.generateOs(board)
     // Create the board
     this.state = {
       location_x: location_x, // X coordinate of X
@@ -85,20 +81,23 @@ getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-generateOs(noOs, board_width, board_length, board) {
-    var o_array = [];
+/**
+ * Finds the os on the board - bit of a hack atm
+ */
+generateOs(board) {
+    var object_array = [];
 
-    for (var i = 0; i < noOs; i++) {
-      while (true) {
-        var x = this.getRandomInt(0, board_width);
-        var y = this.getRandomInt(0, board_length);
-        // Check if this point is occupied
-        if (this.isSpaceFree(x, y, board)) { break; }
+    for (var x = 0; x < board.length; x++) {
+      for (var y = 0; y < board[x].length; y++) {
+        if (board[x][y] == 'O') {
+          board[x][y] = null;
+          var o = new SimpleObject(x, y, this.board_width, this.board_length)
+          object_array.push(o);
+        }
       }
-      var object = new SimpleObject(x, y)
-      o_array.push(object);
     }
-    return o_array;
+
+    return object_array;
   }
 
   deepCopyArray(array) {
@@ -166,65 +165,6 @@ generateOs(noOs, board_width, board_length, board) {
     }
 
     return true;
-  }
-
-  generateNextMazePoint() {
-    if (Math.random() > this.level_openness) {
-      return 1;
-    } else {
-      return -1;
-    }
-  }
-
-  generateMaze() {
-    var visited_cells = new Set();
-    var current_point = {x: 0, y: 0};
-    var goal = {x: this.board_width-1, y: this.board_length-1};
-    var board = [];
-
-    for (var x = 0; x < this.board_width; x++) {
-      board.push([]);
-      for (var y = 0; y < this.board_length; y++) {
-        board[x].push(null);
-      }
-    }
-
-    for (x = 0; x < this.board_width; x++) {
-      for (y = 0; y < this.board_length; y++) {
-        board[x][y] = 'I';
-      }
-    }
-
-    while (current_point.x != goal.x || current_point.y != goal.y) {
-      board[current_point.x][current_point.y] = null;
-
-      // Pick an adjacent cell
-      var new_point;
-      if (Math.random() > 0.5) {
-        // Change y
-        var new_y = current_point.y + this.generateNextMazePoint();
-        // Check the bounds
-        if (new_y < 0 || new_y >= this.board_length) {
-          continue
-        } 
-        new_point = { x: current_point.x, y:new_y };
-      } else {
-        // Change x
-        var new_x = current_point.x + this.generateNextMazePoint();
-        if (new_x < 0 || new_x >= this.board_width) {
-          continue
-        } 
-        new_point = { x: new_x, y:current_point.y };
-      }
-
-      if (!visited_cells.has(new_point)) {
-        current_point = new_point;
-        visited_cells.add(current_point);
-      }
-    }
-
-    board[goal.x][goal.y] = <img src="flag_24.png" />;
-    return board;
   }
 
   /**
