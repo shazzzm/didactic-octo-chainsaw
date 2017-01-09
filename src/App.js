@@ -122,7 +122,6 @@ generateOs(noOs, board_width, board_length, board) {
   }
 
   move(x, y) {
-    var board = this.deepCopyArray(this.state.board);
     var new_x = this.state.location_x + x;
     var new_y = this.state.location_y + y;
     var won = this.state.won;
@@ -131,34 +130,24 @@ generateOs(noOs, board_width, board_length, board) {
     if (new_x == this.goal[0] && new_y == this.goal[1]) {
       alert('You won!')
       won = true;
-    } else if (!won && !lost && this.hasUserLost(this.state.location_x, this.state.location_y, board)) {
+    } else if (!won && !lost && this.hasUserLost(this.state.location_x, this.state.location_y, this.maze)) {
       alert('You lost! :(')
       lost = true;
     }
 
-    
-
     // Check we're still on the map
-    if (this.isSpaceFree(new_x, new_y, board)) {
-      // Clean up the user's X    
-      board[this.state.location_x][this.state.location_y] = null;
-      board[new_x][new_y] = 'X';
-      // Move the os
-      var new_o_array = this.deepCopyArray(this.state.o_array);
-      for (var i = 0; i < new_o_array.length; i++) {
-        new_o_array = this.calculateOMoves(i, board, new_o_array);
-      }
+    if (this.isSpaceFree(new_x, new_y, this.maze, this.state.object_array)) {
       // Do the o movement
-      board = this.moveOsOnBoard(board, this.state.o_array, new_o_array);
+      //this.moveOsOnBoard(board, this.state.o_array, new_o_array);
       //board = this.updateOs(board)
-      this.setState({location_x : new_x, location_y : new_y, board : board, o_array : new_o_array, won: won, lost:lost})
+      this.setState({location_x : new_x, location_y : new_y, object_array : this.state.object_array, won: won, lost:lost})
     } else {
       this.setState({won: won, lost:lost})
     }
 
   }
 
-  isSpaceFree(x, y, board, o_array) {
+  isSpaceFree(x, y, board, object_array) {
     // Check we're still on the map
     if (x < 0 || y < 0 || this.board_length <= y ||
         this.board_width <= x) { return false }
@@ -169,8 +158,8 @@ generateOs(noOs, board_width, board_length, board) {
     // Checks if a move is legit
     if (positionIsNotGoal && board[x][y] != null) { return false }
 
-    for (var i in o_array) {
-      if (o_array[i][0] == x && o_array[i][1] == y) {
+    for (var i in object_array) {
+      if (object_array[i].x == x && object_array[i].y == y) {
         return false;
       } 
     }
@@ -246,7 +235,6 @@ generateOs(noOs, board_width, board_length, board) {
       board[object_array[i].x][object_array[i].y] = object_array[i].logo;
     }
     board[this.state.location_x][this.state.location_y] = 'X';
-    console.log(board)
     return board;
   }
 
