@@ -17,7 +17,7 @@ class SimpleObject {
      * x_y - y location of the user
      * 
      */
-    update(x_x, x_y, object_array) {
+    update(x_x, x_y, object_array, board) {
         var new_oX = this.x;
         var new_oY = this.y;
         var xMovePossible = false;
@@ -36,31 +36,31 @@ class SimpleObject {
         }
 
         // Figure out which direction we can move in
-        if (this.isSpaceFree(new_oX, oY, board, object_array)) {
+        if (this.isSpaceFree(new_oX, this.y, board, object_array)) {
             xMovePossible = true;
         } 
-        if (this.isSpaceFree(oX, new_oY, board, object_array)) {
+        if (this.isSpaceFree(this.x, new_oY, board, object_array)) {
             yMovePossible = true;
         }
 
         // Select a direction to move in
         // if we can only move in 1 direction, do that
         if (xMovePossible && !yMovePossible) {
-            new_oY = oY;
+            new_oY = this.y;
         } else if (!xMovePossible && yMovePossible) {
-            new_oX = oX;
+            new_oX = this.x;
         } else if (xMovePossible && yMovePossible) {
         // If we can move in both, chose one!
         var directionToMove = Math.random() > 0.5;
 
         if (directionToMove) {
-            new_oY = oY;
+            new_oY = this.y;
         } else {
-            new_oX = oX;
+            new_oX = this.x;
         }
         } else {
-            new_oX = oX;
-            new_oY = oY;
+            new_oX = this.x;
+            new_oY = this.y
         }
 
         this.x = new_oX;
