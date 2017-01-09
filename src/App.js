@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './App.css';
-
+import SimpleObject from './SimpleObject'
 class Square extends React.Component {
   render() {
     return (
@@ -50,7 +50,6 @@ class Board extends React.Component {
         this.level = level_vals.length - 1;
       }
     }
-    console.log(this.level)
 
     var location_x = 0;
     var location_y = 0;
@@ -59,27 +58,17 @@ class Board extends React.Component {
     this.goal = [this.board_width-1, this.board_length-1]; // Place we want to reach
 
     // Let's figure out the difficulty
-
     this.num_os = level_vals[this.level-1][0];
     this.level_openness = level_vals[this.level][1]; // How many squares will be maze
-    var board = [];
 
-    for (var x = 0; x < this.board_width; x++) {
-      board.push([]);
-      for (var y = 0; y < this.board_length; y++) {
-        board[x].push(null);
-      }
-    }
-    board = this.generateMaze(board)
-    board[0][0] = 'X';
-    board[this.goal[0]][this.goal[1]] = <img src="flag_24.png" />
-    var o_array = this.generateOs(this.num_os, this.board_width, this.board_length, board)
+    var board = this.generateMaze()
+    this.maze = board;
+    var object_array = this.generateOs(this.num_os, this.board_width, this.board_length, board)
     // Create the board
     this.state = {
       location_x: location_x, // X coordinate of X
       location_y: location_y, // Y coordinate of X
-      o_array: o_array, // Array containing location of the os
-      board: board, // The board
+      object_array: object_array, // Array containing location of the os
       won: false, // Whether the user has won
       lost: false, // If the user has lost
     };
@@ -110,9 +99,8 @@ generateOs(noOs, board_width, board_length, board) {
         // Check if this point is occupied
         if (this.isSpaceFree(x, y, board)) { break; }
       }
-      var point = [x, y];
-      board[x][y] = 'O';
-      o_array.push(point);
+      var object = SimpleObject(x, y)
+      o_array.push(object);
     }
     return o_array;
   }
@@ -127,86 +115,6 @@ generateOs(noOs, board_width, board_length, board) {
       new_arr.push(tmp);
     }
     return new_arr;
-  }
-
-  calculateOMoves(oIndex, board, new_o_array) {  
-    var oX = new_o_array[oIndex][0];
-    var oY = new_o_array[oIndex][1];
-    var new_oX = oX;
-    var new_oY = oY;
-    var xMovePossible = false;
-    var yMovePossible = false;
-
-    // Figure out which direction we want to move in
-    if (this.state.location_x > oX) {
-      new_oX += 1;
-    } else if (this.state.location_x < oX) {
-      new_oX -= 1;
-    } 
-    if (this.state.location_y > oY ) {
-      new_oY += 1;
-    } else if (this.state.location_y < oY) {
-      new_oY -= 1;
-    }
-
-    // Figure out which direction we can move in
-    if (this.isSpaceFree(new_oX, oY, board, new_o_array)) {
-      xMovePossible = true;
-    } 
-    if (this.isSpaceFree(oX, new_oY, board, new_o_array)) {
-      yMovePossible = true;
-    }
-
-    // Select a direction to move in
-    // if we can only move in 1 direction, do that
-    if (xMovePossible && !yMovePossible) {
-      new_oY = oY;
-    } else if (!xMovePossible && yMovePossible) {
-      new_oX = oX;
-    } else if (xMovePossible && yMovePossible) {
-      // If we can move in both, chose one!
-      var directionToMove = Math.random() > 0.5;
-
-      if (directionToMove) {
-        new_oY = oY;
-      } else {
-        new_oX = oX;
-      }
-    } else {
-      new_oX = oX;
-      new_oY = oY;
-    }
-
-    new_o_array[oIndex][0] = new_oX;
-    new_o_array[oIndex][1] = new_oY;
-
-    return new_o_array
-  }
-
-  moveOsOnBoard(board, old_o_array, new_o_array) {
-    // Remove the old os
-    for (var i = 0; i < old_o_array.length; i++) {
-      board[old_o_array[i][0]][old_o_array[i][1]] = null;
-    }
-
-    // Create the new os
-    for (var i = 0; i < new_o_array.length; i++) {
-      board[new_o_array[i][0]][new_o_array[i][1]] = 'O';
-    }
-
-    return board;
-  }
-
-  countOsOnBoard(board) {
-    var count = 0;
-    for (var i = 0; i < board.length; i++) {
-      for (var j = 0; j < board[i].length; j++) {
-        if (board[i][j] === 'O') {
-          count++;
-        }
-      }
-    }
-    return count;
   }
 
   hasUserLost(x, y, board) {
@@ -292,22 +200,31 @@ generateOs(noOs, board_width, board_length, board) {
     }
   }
 
-  generateMaze(board) {
+  generateMaze() {
     var visited_cells = new Set();
     var current_point = {x: 0, y: 0};
     var goal = {x: this.board_width-1, y: this.board_length-1};
+    var board = [];
+
+    for (var x = 0; x < this.board_width; x++) {
+      board.push([]);
+      for (var y = 0; y < this.board_length; y++) {
+        board[x].push(null);
+      }
+    }
+
     for (var x = 0; x < this.board_width; x++) {
       for (var y = 0; y < this.board_length; y++) {
         board[x][y] = 'I';
       }
     }
-    var prev_prob = 0.5;
+
     while (current_point.x != goal.x || current_point.y != goal.y) {
       board[current_point.x][current_point.y] = null;
 
       // Pick an adjacent cell
       var new_point;
-      if (Math.random() > prev_prob) {
+      if (Math.random() > 0.5) {
         // Change y
         var new_y = current_point.y + this.generateNextMazePoint();
         // Check the bounds
@@ -330,9 +247,10 @@ generateOs(noOs, board_width, board_length, board) {
       }
     }
 
-    board[goal.x][goal.y] = null;
+    board[goal.x][goal.y] = <img src="flag_24.png" />;
     return board;
   }
+
   renderRow(row_y, row_size) {
     var rows = [];
     for (var i=0; i < row_size; i++) {
