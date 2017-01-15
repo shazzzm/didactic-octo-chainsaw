@@ -44,7 +44,7 @@ class Board extends React.Component {
       if (this.level < 1) {
         this.level = 1;
       } else if (this.level > num_levels) {
-        this.level = num_levels - 1;
+        this.level = num_levels;
       }
     }
 
@@ -114,10 +114,10 @@ generateOs(board) {
 
   hasUserLost(x, y, board) {
     // Check if the user can move - if they can't they've lost
-    return !this.isSpaceFree(x+1, y, board) &&
-           !this.isSpaceFree(x-1, y, board) &&
-           !this.isSpaceFree(x, y+1, board) &&
-           !this.isSpaceFree(x, y-1, board);
+    return !this.isSpaceFree(x+1, y, board, this.state.object_array) &&
+           !this.isSpaceFree(x-1, y, board, this.state.object_array) &&
+           !this.isSpaceFree(x, y+1, board, this.state.object_array) &&
+           !this.isSpaceFree(x, y-1, board, this.state.object_array);
   }
 
   move(x, y) {

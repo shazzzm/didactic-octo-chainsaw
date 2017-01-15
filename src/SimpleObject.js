@@ -78,8 +78,8 @@ export default class SimpleObject {
         }
 
         // Check we're still on the map
-        if (x < 0 || y < 0 || board.length <= y ||
-            board[0].length <= x) { return false }
+        if (x < 0 || y < 0 || board.length <= x ||
+            board[0].length <= y) { return false }
 
         // Are we moving into the maze?
         if (board[x][y] != null) { return false }

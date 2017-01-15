@@ -151,6 +151,7 @@ generator.printBoard()
 console.log("Do you like this board?")
 
 var jsonString = JSON.stringify(generator.board)
+var oString = JSON.stringify(generator.o_array)
 fs.writeFile("level.json", jsonString, function (err) {
     if (err) return console.log(err);
     console.log("Level generated")
